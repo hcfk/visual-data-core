@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "@coreui/coreui": "^5.2.0",
+    "@coreui/react": "^5.5.0",
+    "axios": "^1.8.4",
+    "chart.js": "^4.4.8",
+    "react-router-dom": "^7.4.1"
+  }
+}
