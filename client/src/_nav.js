@@ -18,14 +18,14 @@ import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
 const _nav = [
   {
     component: CNavItem,
-    name: 'Yönetim Paneli',
+    name: 'Management Panel',
     to: '/dashboard',
     icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
     badge: { color: 'info', text: 'NEW' },
   },
-  {
+/*  ****Will be updated  {
     component: CNavGroup,
-    name: 'İşlem Yönetimi',
+    name: 'Process Management',
     to: '/queues',
     icon: <CIcon icon={cilPuzzle} customClassName="nav-icon" />,
     items: [
@@ -34,7 +34,7 @@ const _nav = [
       { component: CNavItem, name: 'Youtube İndirme', to: '/queues/youtubelinkqueue' },
       { component: CNavItem, name: 'İşlem Uyarıları', to: '/notifiers/notifiersList' },
     ],
-  },
+  }, */
   {
     component: CNavGroup,
     name: 'Yetenekler',
