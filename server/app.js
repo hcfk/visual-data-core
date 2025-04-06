@@ -5,19 +5,11 @@ const winston = require('winston');
 const http = require('http'); // For HTTP support
 const ensureDirectoryExists = require('./utils/checkDirectory');
 const authRoutes = require('./routes/authRoutes'); 
-const fileQueueRoutes = require('./routes/fileQueueRoutes');
 const errorHandler = require('./middleware/errorMiddleware');
 const fileRoutes = require('./routes/fileRoutes');
 const notifierRoutes = require('./routes/notifierRoutes');
 const userRoutes = require('./routes/userRoutes');
-const  chatRoutes = require('./routes/chatRoutes');
-const  mediaStatisticsRoutes = require('./routes/mediaStatisticsRoutes')
-// Import services to initialize
-require('./services/telegramBotService');
-require('./services/mp3fileQueueProcessor');
-require('./services/transcribingService');
-require('./services/youtubeDownloadService');
-// const fs = require('fs');
+
 
 // Load environment variables depending on development or production
 const ENV = process.env.NODE_ENV || 'development';
@@ -29,8 +21,7 @@ const ENV = process.env.NODE_ENV || 'development';
 //}
 
 console.log('Environment:', ENV);
-const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mCMSDB';
-const uploadsDir = process.env.UPLOADS_DIR || 'uploads';
+const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/vdcDB';
 
 // Configure Winston logger
 const logger = winston.createLogger({

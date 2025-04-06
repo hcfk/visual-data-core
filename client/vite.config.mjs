@@ -9,6 +9,7 @@ export default defineConfig(() => {
     build: {
       outDir: 'build',
     },
+    logLevel: 'info',
     css: {
       postcss: {
         plugins: [
