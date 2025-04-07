@@ -39,9 +39,7 @@ const AppHeaderDropdown = () => {
     localStorage.removeItem('token')
     navigate('/login') // Redirect after logout if needed
   }
-  const handleNotifiers = () => {
-    navigate('/notifiers/notifiersList') // Redirect after logout if needed
-  }
+
   const handleUpdateProfile = () => {
     navigate('/admin/profileUpdate') // Redirect after logout if needed
   }
@@ -86,13 +84,6 @@ const AppHeaderDropdown = () => {
           <CIcon icon={cilSettings} className="me-2" />
           Ayarlar
         </CDropdownItem> */}
-        <CDropdownItem onClick={handleNotifiers}>
-          <CIcon icon={cilFile} className="me-2" />
-          Uyarılar
-          <CBadge color="primary" className="ms-2">
-            20
-          </CBadge>
-        </CDropdownItem>
         <CDropdownDivider />
 
         <CDropdownDivider />

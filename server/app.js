@@ -1,27 +1,29 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-const winston = require('winston');
-const http = require('http'); // For HTTP support
-const ensureDirectoryExists = require('./utils/checkDirectory');
-const authRoutes = require('./routes/authRoutes'); 
-const errorHandler = require('./middleware/errorMiddleware');
-const fileRoutes = require('./routes/fileRoutes');
-const notifierRoutes = require('./routes/notifierRoutes');
-const userRoutes = require('./routes/userRoutes');
+import express from 'express'
+import mongoose from 'mongoose'
+import dotenv from 'dotenv'
+import winston from 'winston'
+import http from 'http'
+import cors from 'cors'
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
 
+// Custom imports (ensure all use `export default`)
+import authRoutes from './routes/authRoutes.js'
+import userRoutes from './routes/userRoutes.js'
+import errorHandler from './middleware/errorMiddleware.js'
 
-// Load environment variables depending on development or production
-const ENV = process.env.NODE_ENV || 'development';
-//const envFilePath = `.env.${ENV}`;
-//if (fs.existsSync(envFilePath)) {
-//  dotenv.config({ envFilePath: `.env.${ENV}` }) || dotenv.config();
-//} else {
-  dotenv.config(); // Fallback to default .env if specific file not found
-//}
+// ESModule fix for __dirname
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const uploadsDir = path.join(__dirname, 'uploads')
 
-console.log('Environment:', ENV);
-const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/vdcDB';
+// Load environment variables
+const ENV = process.env.NODE_ENV || 'development'
+dotenv.config()
+
+console.log('Environment:', ENV)
+const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/vdcDB'
 
 // Configure Winston logger
 const logger = winston.createLogger({
@@ -35,90 +37,64 @@ const logger = winston.createLogger({
   transports: [
     new winston.transports.Console({ format: winston.format.simple() }),
     new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'logs/combined.log' })
-  ]
-});
+    new winston.transports.File({ filename: 'logs/combined.log' }),
+  ],
+})
 
-// Check and create the uploads directory if needed
-try {
-  ensureDirectoryExists(uploadsDir);
-} catch (error) {
-  logger.error('Error ensuring uploads directory exists:', { message: error.message, stack: error.stack });
-  process.exit(1); // Exit if uploads directory setup fails
-}
+// Ensure uploads directory exists
 
-// Initialize Express app
-const app = express();
-//const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [];
+// Init Express
+const app = express()
 
-// Middleware
-const cors = require('cors');
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    //if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    //} else {
-    //  return callback(new Error('Not allowed by CORS'));
-    //}
-  },
-  optionsSuccessStatus: 200,
-}));
+// CORS setup
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true)
+      return callback(null, true)
+    },
+    optionsSuccessStatus: 200,
+  })
+)
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
 
-// Log all incoming requests
+// Request logger middleware
 app.use((req, res, next) => {
-  logger.info(`Incoming request: ${req.method} ${req.url} from IP ${req.ip}`);
-  next();
-}); 
+  logger.info(`Incoming request: ${req.method} ${req.url} from IP ${req.ip}`)
+  next()
+})
 
-// Route setup
-app.use('/api/v1/files', fileRoutes);
-app.use('/api/v1/auth', authRoutes);  
-app.use('/api/v1/queues', fileQueueRoutes);
-app.use('/api/v1/statistic', mediaStatisticsRoutes);
-//app.use('/api/youtube', youtubeRoutes);
-app.use('/api/v1/notifiers', notifierRoutes);
-app.use('/api/v1/users', userRoutes);
-app.use('/api/v1/chat', chatRoutes);
+// Routes
+app.use('/api/v1/auth', authRoutes)
+app.use('/api/v1/users', userRoutes)
 
 // MongoDB connection
-mongoose.connect(mongoURI, {})
-  .then(() => logger.info('Connected to MongoDB'))
+mongoose
+  .connect(mongoURI)
+  .then(() => logger.info('✅ Connected to MongoDB'))
   .catch((error) => {
-    logger.error('MongoDB connection error:', { message: error.message, stack: error.stack });
-    process.exit(1); // Exit if MongoDB connection fails
-  });
+    logger.error('MongoDB connection error:', {
+      message: error.message,
+      stack: error.stack,
+    })
+    process.exit(1)
+  })
 
-// Centralized error handling middleware
+// Central error handler
 app.use((err, req, res, next) => {
   logger.error(`Error occurred: ${err.message}`, {
     stack: err.stack,
     url: req.originalUrl,
     method: req.method,
     ip: req.ip,
-  });
-  errorHandler(err, req, res, next);
-});
+  })
+  errorHandler(err, req, res, next)
+})
 
-// HTTPS Server Configuration
-// const PORT = process.env.PORT || 5000;
-// const options = {
-//   key: fs.readFileSync('server.key'),
-//   cert: fs.readFileSync('server.cert'),
-// };
-// logger.info('HTTPS key and certificate loaded successfully');
-// // Start HTTPS server
-// https.createServer(options, app).listen(PORT, () => {
-//   logger.info(`Server running on http://0.0.0.0:${PORT}`);
-// });
-
-const PORT = process.env.PORT || 5000;
 // Start HTTP server
+const PORT = process.env.PORT || 5005
 http.createServer(app).listen(PORT, () => {
-  logger.info(`Server running on http://0.0.0.0:${PORT}`);
-});
-
-module.exports = app;
+  logger.info(`🚀 Server running on http://0.0.0.0:${PORT}`)
+})

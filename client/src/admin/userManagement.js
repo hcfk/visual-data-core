@@ -122,18 +122,18 @@ const UserManagement = () => {
 
   return (
     <>
-      <h3>Kullanıcı Yönetimi</h3>
+      <h3>User Management</h3>
       {message && <div className="alert alert-success">{message}</div>}
       {error && <div className="alert alert-danger">{error}</div>}
 
       <CTable hover responsive>
         <CTableHead>
           <CTableRow>
-            <CTableHeaderCell>Kullanıcı Adı</CTableHeaderCell>
+            <CTableHeaderCell>User Name</CTableHeaderCell>
             <CTableHeaderCell>Email</CTableHeaderCell>
-            <CTableHeaderCell>Rol</CTableHeaderCell>
-            <CTableHeaderCell>Durum</CTableHeaderCell>
-            <CTableHeaderCell>İşlemler</CTableHeaderCell>
+            <CTableHeaderCell>Role</CTableHeaderCell>
+            <CTableHeaderCell>Status</CTableHeaderCell>
+            <CTableHeaderCell>Processes</CTableHeaderCell>
           </CTableRow>
         </CTableHead>
         <CTableBody>
@@ -168,11 +168,11 @@ const UserManagement = () => {
 
       {/* Edit User Modal */}
       <CModal visible={showEditModal} onClose={() => setShowEditModal(false)}>
-        <CModalHeader closeButton>Kullanıcıyı Düzenle</CModalHeader>
+        <CModalHeader closeButton>Modify User</CModalHeader>
         <CModalBody>
           <CForm>
             <div className="mb-3">
-              <CFormLabel>Kullanıcı Adı</CFormLabel>
+              <CFormLabel>User Name</CFormLabel>
               <CFormInput
                 value={selectedUser?.username || ''}
                 onChange={(e) => setSelectedUser({ ...selectedUser, username: e.target.value })}
@@ -195,26 +195,8 @@ const UserManagement = () => {
                 <option value="">Rol Seçin</option>
                 <option value="admin">Admin</option>
                 <option value="normal">Normal</option>
-                <option value="contentadmin">İçerik Yöneticisi</option>
+                {/* Future feature <option value="contentadmin">Content Admin</option> */}
               </CFormSelect>
-            </div>
-            <div className="mb-3">
-              <CFormLabel>Telegram Kullanıcı Adı</CFormLabel>
-              <CFormInput
-                value={selectedUser?.telegram_username || ''}
-                onChange={(e) =>
-                  setSelectedUser({ ...selectedUser, telegram_username: e.target.value })
-                }
-              />
-            </div>
-            <div className="mb-3">
-              <CFormLabel>WhatsApp Numarası</CFormLabel>
-              <CFormInput
-                value={selectedUser?.whatsapp_number || ''}
-                onChange={(e) =>
-                  setSelectedUser({ ...selectedUser, whatsapp_number: e.target.value })
-                }
-              />
             </div>
             <div className="mb-3">
               <CFormLabel>Aktif</CFormLabel>
@@ -238,11 +220,11 @@ const UserManagement = () => {
 
       {/* Password Reset Modal */}
       <CModal visible={showPasswordModal} onClose={() => setShowPasswordModal(false)}>
-        <CModalHeader closeButton>Şifre Ayarla</CModalHeader>
+        <CModalHeader closeButton>Arrange Password</CModalHeader>
         <CModalBody>
           <CForm>
             <div className="mb-3">
-              <CFormLabel>Yeni Şifre</CFormLabel>
+              <CFormLabel>New Password</CFormLabel>
               <CFormInput
                 type="password"
                 value={newPassword}

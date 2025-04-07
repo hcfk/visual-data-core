@@ -1,169 +1,160 @@
-const express = require('express');
-const router = express.Router();
-const User = require('../models/User');
-const authMiddleware = require('../middleware/authMiddleware'); // Authentication middleware
-const logger = require('../utils/logger'); // Logger utility
-const bcrypt = require('bcryptjs');
+import express from 'express'
+import bcrypt from 'bcryptjs'
+import User from '../models/User.js'
+import authMiddleware from '../middleware/authMiddleware.js'
+import logger from '../utils/logger.js'
 
-// Route to get user profile details
+const router = express.Router()
+
+// GET user profile
 router.get('/profile', authMiddleware, async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.id
+    const user = await User.findById(userId).select('-password')
 
-    // Find the user by ID, excluding the password field
-    const user = await User.findById(userId).select('-password');
     if (!user) {
-      logger.warn(`User not found: ${userId}`);
-      return res.status(404).json({ message: 'Kullanıcı bulunamadı.' });
+      logger.warn(`User not found: ${userId}`)
+      return res.status(404).json({ message: 'User not found.' })
     }
 
-    res.json({ user });
+    res.json({ user })
   } catch (error) {
-    logger.error('Error fetching profile:', { error: error.message, stack: error.stack });
-    res.status(500).json({ error: 'Profil getirilirken bir hata oluştu.' });
+    logger.error('Error fetching profile:', { error: error.message, stack: error.stack })
+    res.status(500).json({ error: 'An error occurred while retrieving the profile.' })
   }
-});
+})
 
-// Route to update user profile
+// PUT update user profile (admin)
 router.put('/update-user/:user_id', authMiddleware, async (req, res) => {
-  logger.info('Updating user profile');
+  logger.info('Updating user profile')
   try {
-    const { username, email, role, isActive, telegram_username, whatsapp_number } = req.body;
-
-    // Validate the request body
-    if (whatsapp_number && !/^\+\d{10,15}$/.test(whatsapp_number)) {
-      return res.status(400).json({ message: 'WhatsApp numarası geçerli bir formatta olmalıdır. (ör. +1234567890)' });
-    }
+    const { username, email, role, isActive } = req.body
 
     const updatedUser = await User.findByIdAndUpdate(
       req.params.user_id,
-      { username, email, role, isActive, telegram_username, whatsapp_number },
+      { username, email, role, isActive },
       { new: true, runValidators: true }
-    );
+    )
 
     if (!updatedUser) {
-      return res.status(404).json({ message: 'Kullanıcı Bulunamadı' });
+      return res.status(404).json({ message: 'User not found.' })
     }
 
-    res.json({ message: 'Kullanıcı başarılı şekilde güncellendi', user: updatedUser });
+    res.json({ message: 'User updated successfully.', user: updatedUser })
   } catch (error) {
-    logger.error('Error updating user:', { error: error.message });
-    res.status(500).json({ error: 'Kullanıcı güncellenirken bir hata oluştu' });
+    logger.error('Error updating user:', { error: error.message })
+    res.status(500).json({ error: 'An error occurred while updating the user.' })
   }
-});
+})
 
-
+// PUT set password (admin only)
 router.put('/users/:id/set-password', authMiddleware, async (req, res) => {
   try {
-    const { id } = req.params;
-    const { newPassword } = req.body;
+    const { id } = req.params
+    const { newPassword } = req.body
 
-    // Only admins should be able to set or reset passwords for other users
     if (req.user.role !== 'admin') {
-      logger.warn(`Unauthorized access attempt to set password for user ${id} by user ${req.user.id}`);
-      return res.status(403).json({ message: 'Access denied' });
+      logger.warn(`Unauthorized password set attempt by ${req.user.id}`)
+      return res.status(403).json({ message: 'Access denied.' })
     }
 
     if (!newPassword || newPassword.length < 6) {
-      return res.status(400).json({ message: 'Password must be at least 6 characters long' });
+      return res.status(400).json({ message: 'Password must be at least 6 characters long.' })
     }
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const hashedPassword = await bcrypt.hash(newPassword, 10)
 
-    const updatedUser = await User.findByIdAndUpdate(
-      id,
-      { password: hashedPassword },
-      { new: true }
-    );
+    const updatedUser = await User.findByIdAndUpdate(id, { password: hashedPassword }, { new: true })
 
     if (!updatedUser) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: 'User not found.' })
     }
 
-    res.json({ message: 'Password updated successfully' });
+    res.json({ message: 'Password updated successfully.' })
   } catch (error) {
-    logger.error('Error setting password:', { error: error.message });
-    res.status(500).json({ error: 'An error occurred while setting password' });
+    logger.error('Error setting password:', { error: error.message })
+    res.status(500).json({ error: 'An error occurred while setting the password.' })
   }
-});
-// Route to change user password
+})
+
+// PUT change own password
 router.put('/change-password', authMiddleware, async (req, res) => {
-  const { currentPassword, newPassword } = req.body;
-  const userId = req.user.id;
+  const { currentPassword, newPassword } = req.body
+  const userId = req.user.id
 
   if (!currentPassword || !newPassword) {
-    return res.status(400).json({ error: 'Eski ve yeni şifre gereklidir.' });
+    return res.status(400).json({ error: 'Current and new passwords are required.' })
   }
 
   try {
-    const user = await User.findById(userId);
+    const user = await User.findById(userId)
     if (!user) {
-      return res.status(404).json({ error: 'Kullanıcı bulunamadı.' });
+      return res.status(404).json({ error: 'User not found.' })
     }
 
-    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    const isMatch = await bcrypt.compare(currentPassword, user.password)
     if (!isMatch) {
-      return res.status(400).json({ error: 'Eski şifre yanlış.' });
+      return res.status(400).json({ error: 'Current password is incorrect.' })
     }
 
-    user.password = await bcrypt.hash(newPassword, 10);
-    await user.save();
+    user.password = await bcrypt.hash(newPassword, 10)
+    await user.save()
 
-    logger.info('Password updated successfully', { userId });
-    res.json({ message: 'Şifre başarıyla güncellendi.' });
+    logger.info('Password updated successfully', { userId })
+    res.json({ message: 'Password updated successfully.' })
   } catch (error) {
-    logger.error('Error changing password:', { error: error.message, stack: error.stack, userId });
-    res.status(500).json({ error: 'Şifre güncellenirken bir hata oluştu.' });
+    logger.error('Error changing password:', {
+      error: error.message,
+      stack: error.stack,
+      userId,
+    })
+    res.status(500).json({ error: 'An error occurred while changing the password.' })
   }
-});
+})
 
-// Route to fetch all users (Admin only)
+// GET all users (admin only)
 router.get('/users', authMiddleware, async (req, res) => {
   if (req.user.role !== 'admin') {
-    logger.warn(`Unauthorized access attempt to fetch all users by user ${req.user.id}, role is ${req.user.role}`);
-    return res.status(403).json({ error: 'Bu işlem için yetkiniz yok.' });
+    logger.warn(`Unauthorized attempt to list users by ${req.user.id}`)
+    return res.status(403).json({ error: 'You are not authorized to perform this action.' })
   }
 
   try {
-    const users = await User.find().select('-password');
-    res.json(users);
+    const users = await User.find().select('-password')
+    res.json(users)
   } catch (error) {
-    logger.error('Error fetching users:', { error: error.message, stack: error.stack });
-    res.status(500).json({ error: 'Kullanıcılar getirilirken bir hata oluştu.' });
+    logger.error('Error fetching users:', { error: error.message, stack: error.stack })
+    res.status(500).json({ error: 'An error occurred while fetching users.' })
   }
-});
+})
 
-// Route for admin to update a user's active status
+// PUT activate/deactivate user (admin only)
 router.put('/admin/users/:id/activate', authMiddleware, async (req, res) => {
-  const { id } = req.params;
-  const { isActive } = req.body;
+  const { id } = req.params
+  const { isActive } = req.body
 
   if (req.user.role !== 'admin') {
-    logger.warn(`Unauthorized access attempt by user ${req.user.id} to modify user ${id}`);
-    return res.status(403).json({ error: 'Bu işlem için yetkiniz yok.' });
+    logger.warn(`Unauthorized activation toggle attempt by ${req.user.id}`)
+    return res.status(403).json({ error: 'You are not authorized to perform this action.' })
   }
 
   try {
-    const updatedUser = await User.findByIdAndUpdate(
-      id,
-      { isActive },
-      { new: true, runValidators: true }
-    );
+    const updatedUser = await User.findByIdAndUpdate(id, { isActive }, { new: true, runValidators: true })
 
     if (!updatedUser) {
-      logger.warn(`User not found for activation status update: ${id}`);
-      return res.status(404).json({ error: 'Kullanıcı bulunamadı.' });
+      logger.warn(`User not found during activation update: ${id}`)
+      return res.status(404).json({ error: 'User not found.' })
     }
 
-    logger.info(`User ${id} activation status updated successfully`, { isActive });
+    logger.info(`User ${id} activation status updated`, { isActive })
     res.json({
-      message: `Kullanıcı ${isActive ? 'aktif' : 'pasif'} duruma getirildi.`,
+      message: `User has been ${isActive ? 'activated' : 'deactivated'}.`,
       user: updatedUser,
-    });
+    })
   } catch (error) {
-    logger.error('Error updating user activation status:', { error: error.message, stack: error.stack });
-    res.status(500).json({ error: 'Kullanıcı durumu güncellenirken bir hata oluştu.' });
+    logger.error('Error updating activation status:', { error: error.message, stack: error.stack })
+    res.status(500).json({ error: 'An error occurred while updating user status.' })
   }
-});
+})
 
-module.exports = router;
+export default router

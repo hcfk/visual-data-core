@@ -30,13 +30,13 @@ const Register = () => {
     const spaces = /\s/ // Spaces
 
     if (turkishCharacters.test(username)) {
-      return 'Kullanıcı adı Türkçe karakter içermemelidir!'
+      return 'user Naame shall not include Turkish Characters'
     }
     if (spaces.test(username)) {
-      return 'Kullanıcı adı boşluk içermemelidir!'
+      return 'User Name shall not include spaces'
     }
     if (invalidCharacters.test(username)) {
-      return 'Kullanıcı adı yalnızca harf, rakam, nokta (.) ve tire (-) içerebilir!'
+      return 'Username can only contain letters, numbers, dots (.) and hyphens (-)!'
     }
     return null
   }
@@ -93,7 +93,7 @@ const Register = () => {
                       <CIcon icon={cilUser} />
                     </CInputGroupText>
                     <CFormInput
-                      placeholder="kullanıcı adı"
+                      placeholder="User Name"
                       autoComplete="username"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}

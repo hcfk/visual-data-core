@@ -26,15 +26,15 @@ const AppSidebar = () => {
 
   // Filter the navigation items based on user role
   const filteredNavigation = navigation.filter((item) => {
-    // Only show "Yönetici İşlemleri" for admin users
-    if (item.name === 'Yönetici İşlemleri' && userRole == 'normal') {
+    // Only show "Admin Tools" for admin users
+    if (item.name === 'Admin Tools' && userRole == 'normal') {
       return false
     }
     return true
   })
   const contentfilteredNavigation = navigation.filter((item) => {
-    // Only show "Yönetici İşlemleri" for admin users
-    if (item.name === 'Yönetici İşlemleri' && userRole == 'normal') {
+    // Only show "Admin Tools" for admin users
+    if (item.name === 'Admin Tools' && userRole == 'normal') {
       return false
     }
     return true

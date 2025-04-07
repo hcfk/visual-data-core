@@ -35,10 +35,10 @@ const _nav = [
   },
   {
     component: CNavGroup,
-    name: 'Yönetici İşlemleri',
+    name: 'Admin Tools',
     to: '/admin',
     icon: <CIcon icon={cilPuzzle} customClassName="nav-icon" />,
-    items: [{ component: CNavItem, name: 'Kullanıcı Yönetimi', to: '/admin/userManagement' }],
+    items: [{ component: CNavItem, name: 'User Management', to: '/admin/userManagement' }],
   },
 
   // Additional components, forms, charts, icons, etc.

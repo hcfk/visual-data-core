@@ -15,9 +15,6 @@ import {
 import CIcon from '@coreui/icons-react'
 import { cilCloudDownload } from '@coreui/icons'
 
-import QueueToBeProcessed from '../widgets/queueToBeProcessed.js'
-import YearlyQueueStats from './yearlyQueueStats.js'
-
 const Dashboard = () => {
   const [summaryStats, setSummaryStats] = useState({
     totalFiles: 0,
@@ -53,40 +50,39 @@ const Dashboard = () => {
 
   const progressofQueues = [
     {
-      title: 'Yüklenmiş dosyalar',
+      title: 'Metric 1',
       value: summaryStats.totalFiles,
-      percent: calculatePercentage(summaryStats.totalFiles, summaryStats.totalFiles),
+      percent: calculatePercentage(85, 100),
       color: 'success',
     },
     {
-      title: 'İşlenmiş Dosyalar',
+      title: 'Metric 2',
       value: summaryStats.totalFilesProcessed,
-      percent: calculatePercentage(summaryStats.totalFilesProcessed, summaryStats.totalFiles),
+      percent: calculatePercentage(90, 120),
       color: 'info',
     },
     {
-      title: 'İşlenmemiş Dosyalar',
+      title: 'Metric 3',
       value: summaryStats.totalFilesNotProcessedYet,
-      percent: calculatePercentage(summaryStats.totalFilesNotProcessedYet, summaryStats.totalFiles),
+      percent: calculatePercentage(75, 205),
       color: 'warning',
     },
     {
-      title: 'Ses Çevrilmiş Dosyalar',
+      title: 'Metrıc 4',
       value: summaryStats.totalFilesConverted,
-      percent: calculatePercentage(summaryStats.totalFilesConverted, summaryStats.totalFiles),
+      percent: calculatePercentage(20, 100),
       color: 'danger',
     },
     {
-      title: 'Sese Çevrilecek Dosyalar',
+      title: 'Metrıc 5',
       value: summaryStats.totalFilesToBeConverted,
-      percent: calculatePercentage(summaryStats.totalFilesToBeConverted, summaryStats.totalFiles),
+      percent: calculatePercentage(88, 100),
       color: 'primary',
     },
   ]
 
   return (
     <>
-      <QueueToBeProcessed className="mb-4" />
       <CCard className="mb-4">
         <CCardBody>
           <CRow>
@@ -94,7 +90,7 @@ const Dashboard = () => {
               <h4 id="traffic" className="card-title mb-0">
                 Traffic
               </h4>
-              <div className="small text-body-secondary">Ocak - Aralık 2024</div>
+              <div className="small text-body-secondary">January - December 2025</div>
             </CCol>
             <CCol sm={7} className="d-none d-md-block">
               <CButton color="primary" className="float-end">
@@ -114,7 +110,6 @@ const Dashboard = () => {
               </CButtonGroup>
             </CCol>
           </CRow>
-          <YearlyQueueStats />
         </CCardBody>
         <CCardFooter>
           <CRow

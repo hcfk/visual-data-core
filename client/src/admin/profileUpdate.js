@@ -83,7 +83,7 @@ const ProfileUpdate = () => {
   return (
     <CCard className="mt-4">
       <CCardHeader>
-        <h5>Profil Güncelle</h5>
+        <h5>Update Profile</h5>
       </CCardHeader>
       <CCardBody>
         {message && <CAlert color="success">{message}</CAlert>}

@@ -1,17 +1,16 @@
-const { Schema, model } = require('mongoose');
-const logger = require('../utils/logger'); // Import the logger utility
+import { Schema, model } from 'mongoose'
+import logger from '../utils/logger.js' // Updated import
 
 const UserSchema = new Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  role: { type: String, enum: ['admin', 'contentadmin','normal'], default: 'normal' },
+  role: { type: String, enum: ['admin', 'contentadmin', 'normal'], default: 'normal' },
   telegram_username: { type: String },
   whatsapp_number: { type: String },
-  isActive: { type: Boolean, default: true } // New field to track active status
-}, { timestamps: true });
+  isActive: { type: Boolean, default: true }
+}, { timestamps: true })
 
-// Mongoose middleware to log when a new user is created
 UserSchema.post('save', function (doc) {
   logger.info('New user created', {
     userId: doc._id,
@@ -19,10 +18,9 @@ UserSchema.post('save', function (doc) {
     role: doc.role,
     email: doc.email,
     isActive: doc.isActive,
-  });
-});
+  })
+})
 
-// Middleware to log updates, including `isActive` status
 UserSchema.post('findOneAndUpdate', function (doc) {
   if (doc) {
     logger.info('User updated', {
@@ -31,13 +29,12 @@ UserSchema.post('findOneAndUpdate', function (doc) {
       role: doc.role,
       email: doc.email,
       isActive: doc.isActive,
-    });
+    })
   } else {
-    logger.warn('User update attempted but no user found');
+    logger.warn('User update attempted but no user found')
   }
-});
+})
 
-// Middleware to log deletions, including `isActive` status
 UserSchema.post('findOneAndRemove', function (doc) {
   if (doc) {
     logger.info('User deleted', {
@@ -46,38 +43,39 @@ UserSchema.post('findOneAndRemove', function (doc) {
       role: doc.role,
       email: doc.email,
       isActive: doc.isActive,
-    });
+    })
   } else {
-    logger.warn('User deletion attempted but no user found');
+    logger.warn('User deletion attempted but no user found')
   }
-});
+})
 
-// Error-handling middleware to handle duplicate keys and other errors
+// Error-handling middleware
 UserSchema.post('save', function (error, doc, next) {
   if (error.name === 'MongoError' && error.code === 11000) {
     logger.error('Duplicate key error during user save:', {
       message: error.message,
       keys: error.keyValue,
-    });
-    next(new Error('A user with this username or email already exists.'));
+    })
+    next(new Error('A user with this username or email already exists.'))
   } else {
-    logger.error('Error during user save operation:', { error });
-    next(error);
+    logger.error('Error during user save operation:', { error })
+    next(error)
   }
-});
+})
 
 UserSchema.post('findOneAndUpdate', function (error, doc, next) {
   if (error) {
-    logger.error('Error during user update operation:', { error });
-    next(error);
+    logger.error('Error during user update operation:', { error })
+    next(error)
   }
-});
+})
 
 UserSchema.post('findOneAndRemove', function (error, doc, next) {
   if (error) {
-    logger.error('Error during user deletion operation:', { error });
-    next(error);
+    logger.error('Error during user deletion operation:', { error })
+    next(error)
   }
-});
+})
 
-module.exports = model('User', UserSchema);
+const User = model('User', UserSchema)
+export default User

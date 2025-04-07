@@ -13,7 +13,7 @@
   "license": "Apache-2.0",
   "author": "Visual Data Core Team (https://github.com/hcfk)",
   "scripts": {
-    "dev": "vite --debug",
+    "dev": "vite",
     "start": "vite",
     "build": "vite build",
     "serve": "vite preview",

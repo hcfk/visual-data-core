@@ -21,13 +21,13 @@ import { authService } from '../../../auth/authService' // Adjust the import pat
 const Login = () => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false) // Loading state for the button
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
   const handleLogin = async (e) => {
     console.log('handleLogin entered')
     e.preventDefault()
-    setLoading(true) // Disable the button
+    setLoading(true)
 
     logger.info('Login attempt started')
 
@@ -35,12 +35,11 @@ const Login = () => {
       const user = await authService.login({ username, password })
       console.log('User logged in:', user)
 
-      // Redirect to the intended route or home page
       const from = location.state?.from?.pathname || '/'
       navigate(from, { replace: true })
     } catch (error) {
       console.log('Login failed:', error)
-      alert(error.message || 'Giriş Başarısız. Lütfen Yeniden Deneyin.')
+      alert(error.message || 'Login failed. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -55,8 +54,8 @@ const Login = () => {
               <CCard className="p-4">
                 <CCardBody>
                   <CForm onSubmit={handleLogin}>
-                    <h1>Giriş</h1>
-                    <p className="text-body-secondary">Hesabınıza giriş yapın</p>
+                    <h1>Login</h1>
+                    <p className="text-body-secondary">Sign in to your account</p>
                     <CInputGroup className="mb-3">
                       <CInputGroupText>
                         <CIcon icon={cilUser} />
@@ -64,7 +63,7 @@ const Login = () => {
                       <CFormInput
                         id="username"
                         name="username"
-                        placeholder="kullanıcı adı"
+                        placeholder="Username"
                         autoComplete="username"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
@@ -78,7 +77,7 @@ const Login = () => {
                         id="password"
                         name="password"
                         type="password"
-                        placeholder="Şifre"
+                        placeholder="Password"
                         autoComplete="current-password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -87,12 +86,12 @@ const Login = () => {
                     <CRow>
                       <CCol xs={6}>
                         <CButton color="primary" className="px-4" type="submit" disabled={loading}>
-                          {loading ? 'Giriş Yapılıyor...' : 'Giriş'}
+                          {loading ? 'Logging in...' : 'Login'}
                         </CButton>
                       </CCol>
                       <CCol xs={6} className="text-right">
                         <CButton color="link" className="px-0">
-                          Şifrenizi mi Unuttunuz?
+                          Forgot Password?
                         </CButton>
                       </CCol>
                     </CRow>
@@ -102,15 +101,14 @@ const Login = () => {
               <CCard className="text-white bg-primary py-5" style={{ width: '44%' }}>
                 <CCardBody className="text-center">
                   <div>
-                    <h2>Kaydolun</h2>
-                    <p>Henüz bir hesabınız yok mu?</p>
+                    <h2>Register</h2>
+                    <p>Don't have an account yet?</p>
                     <p>
-                      Hemen kaydolun ve <b>mediaVerseHub ©2020</b> ile siz de tanışın.
-                      <b> mediaVerseHub ©2020</b> bir media portalı ve Transkripsiyon Hizmetidir.
+                      Sign up now and discover <b>visualdatacore ©2025</b>
                     </p>
                     <Link to="/register">
                       <CButton color="primary" className="mt-3" active tabIndex={-1}>
-                        Şimdi Kaydolun!
+                        Register Now!
                       </CButton>
                     </Link>
                   </div>

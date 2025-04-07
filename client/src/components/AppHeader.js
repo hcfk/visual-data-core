@@ -33,7 +33,6 @@ import { AppHeaderDropdown } from './header/index'
 // Import your notifiers fetching action or API
 import { toggleSidebar, setSidebarVisibility } from '../store/slices/uiSlice' // Import actions from uiSlice
 
-import { fetchUnreadNotifiersCount } from '../notifiers/notifiers' // Adjust path if necessary
 const AppHeader = () => {
   const user = useSelector((state) => state.auth.user) // Access user data from Redux
   const headerRef = useRef()
@@ -41,10 +40,6 @@ const AppHeader = () => {
   const unfoldable = useSelector((state) => state.ui.unfoldable) // Access unfoldable state
   const sidebarShow = useSelector((state) => state.ui.sidebarShow) // Access sidebarShow state
   const dispatch = useDispatch()
-
-  // State to manage unread count and notifier list
-  const [unreadCount, setUnreadCount] = useState(0)
-  const [notifiers, setNotifiers] = useState([])
 
   useEffect(() => {
     // Add scroll effect for header shadow
@@ -59,27 +54,6 @@ const AppHeader = () => {
       document.removeEventListener('scroll', handleScroll)
     }
   }, [])
-
-  useEffect(() => {
-    if (user) {
-      // Polling for unread notifiers
-      const fetchUnreadCount = async () => {
-        const count = await fetchUnreadNotifiersCount(user.id)
-        setUnreadCount(count)
-      }
-      fetchUnreadCount()
-
-      const intervalId = setInterval(fetchUnreadCount, 60000) // Poll every 60 seconds
-      return () => clearInterval(intervalId) // Cleanup interval on unmount
-    }
-  }, [user])
-
-  const handleNotifiersClick = async () => {
-    if (user) {
-      const notifierList = await fetchNotifiers(user.id)
-      setNotifiers(notifierList)
-    }
-  }
 
   return (
     <CHeader position="sticky" className="mb-4 p-0" ref={headerRef}>
@@ -106,37 +80,6 @@ const AppHeader = () => {
           <CNavItem>
             <CNavLink href="#">
               <CIcon icon={cilList} size="lg" />
-            </CNavLink>
-          </CNavItem>
-          <CNavItem>
-            <CNavLink href="#" onClick={handleNotifiersClick} style={{ position: 'relative' }}>
-              {/* Envelope Icon */}
-              <CIcon
-                icon={cilEnvelopeOpen}
-                size="lg"
-                style={{ color: unreadCount > 0 ? 'red' : 'green' }}
-                title={unreadCount > 0 ? `${unreadCount} unread messages` : 'No unread messages'}
-              />
-
-              {/* Badge for Unread Messages */}
-              {unreadCount > 0 && (
-                <CBadge
-                  className="border border-light"
-                  color="danger"
-                  shape="rounded-circle"
-                  style={{
-                    position: 'absolute',
-                    top: '0',
-                    right: '0',
-                    transform: 'translate(50%, -50%)',
-                    fontSize: '0.75rem',
-                    padding: '0.25em 0.5em',
-                  }}
-                >
-                  {unreadCount}
-                  <span className="visually-hidden">unread messages</span>
-                </CBadge>
-              )}
             </CNavLink>
           </CNavItem>
         </CHeaderNav>

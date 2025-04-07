@@ -54,7 +54,7 @@ export default defineConfig(() => {
       proxy: {
         '/api': {
           target: 'http://localhost:5005',
-          changeOrigin: true,
+          changeOrigin: false,
           secure: false, // Use true for production; false can be used in development if the backend SSL is self-signed
           rewrite: (path) => path.replace(/^\/api/, '/api'),
         },

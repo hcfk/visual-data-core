@@ -19,11 +19,6 @@ const routes = [
   { path: '/admin/profileUpdate', name: 'ProfileUpdate', element: ProfileUpdate },
   { path: '/admin/passwordChange', name: 'PasswordChange', element: PasswordChange },
   { path: '/admin/userManagement', name: 'UserManagement', element: UserManagement },
-  {
-    path: '/notifiers/notifiersList',
-    name: 'NotifiersList',
-    element: NotifiersList,
-  },
   { path: '/talents/chat', name: 'Chat', element: Chat },
 ]
 
