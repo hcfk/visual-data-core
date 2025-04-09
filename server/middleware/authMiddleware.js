@@ -1,5 +1,7 @@
+// middleware/authMiddleware.js
+
 import jwt from 'jsonwebtoken'
-import logger from '../utils/logger.js' // ESModule import
+import logger from '../utils/logger.js'
 
 const authMiddleware = (req, res, next) => {
   const authHeader = req.header('Authorization')
@@ -31,12 +33,25 @@ const authMiddleware = (req, res, next) => {
       return res.status(403).json({ message: 'Your account is inactive. Please contact support.' })
     }
 
+    // Project-level role check (for future use)
+    const projectId = req.header('x-project-id') || req.query.projectId || req.body.projectId
+    if (projectId) {
+      req.projectId = projectId
+
+      // You can extend this block to fetch project data and check access
+      // Example:
+      // const project = await Project.findById(projectId)
+      // const isMember = project.members.find(m => m.userId.equals(decoded.id))
+      // if (!isMember) return res.status(403).json({ message: 'You do not have access to this project' })
+    }
+
     req.user = decoded
 
     logger.info('Authorization successful', {
       userId: decoded.id,
       role: decoded.role,
       isActive: decoded.isActive,
+      projectId,
       ip: req.ip,
       url: req.originalUrl,
       method: req.method,

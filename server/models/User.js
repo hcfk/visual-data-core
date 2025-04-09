@@ -1,16 +1,24 @@
-import { Schema, model } from 'mongoose'
-import logger from '../utils/logger.js' // Updated import
+import { Schema, model, Types } from 'mongoose'
+import logger from '../utils/logger.js'
 
 const UserSchema = new Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  role: { type: String, enum: ['admin', 'contentadmin', 'normal'], default: 'normal' },
-  telegram_username: { type: String },
-  whatsapp_number: { type: String },
-  isActive: { type: Boolean, default: true }
+
+  // Role definitions aligned with project-based access
+  role: {
+    type: String,
+    enum: ['superadmin', 'projectadmin', 'projectuser'],
+    default: 'projectuser',
+  },
+
+  // Project association (user can belong to multiple projects)
+  projects: [{ type: Types.ObjectId, ref: 'Project' }],
+  isActive: { type: Boolean, default: true },
 }, { timestamps: true })
 
+// Logging middlewares
 UserSchema.post('save', function (doc) {
   logger.info('New user created', {
     userId: doc._id,
@@ -49,7 +57,7 @@ UserSchema.post('findOneAndRemove', function (doc) {
   }
 })
 
-// Error-handling middleware
+// Error handling middleware
 UserSchema.post('save', function (error, doc, next) {
   if (error.name === 'MongoError' && error.code === 11000) {
     logger.error('Duplicate key error during user save:', {

@@ -13,61 +13,67 @@ dotenv.config()
 const JWT_SECRET = process.env.JWT_SECRET
 const router = express.Router()
 
-// Middleware to log incoming requests
+// Log all incoming requests
 router.use((req, res, next) => {
-  logger.info(`Incoming request: ${req.method} ${req.originalUrl}`)
+  logger.info('Incoming request', {
+    method: req.method,
+    url: req.originalUrl,
+    ip: req.ip,
+  })
   next()
 })
 
-// Route for registering a user
+// Register a new user
 router.post('/register', validateUser, async (req, res, next) => {
   try {
     await registerUser(req, res)
   } catch (error) {
-    logger.error(`Error in /register route: ${error.message}`, { error })
+    logger.error('Error in /register route', { error })
     next(error)
   }
 })
 
-// Route for login
+// Login
 router.post('/login', async (req, res, next) => {
   const { username, password } = req.body
 
   try {
     if (!username || !password) {
-      logger.warn('Login attempt failed: Missing username or password')
+      logger.warn('Login failed: Missing credentials')
       return res.status(400).json({ message: 'Username and password are required.' })
     }
 
-    logger.info(`Login Started authRoute`)
-
     const user = await User.findOne({ username })
     if (!user) {
-      logger.warn(`Login failed for "${username}": User not found`)
+      logger.warn('Login failed: User not found', { username })
       return res.status(401).json({ message: 'Invalid username or password.' })
     }
 
     if (!user.isActive) {
-      logger.warn(`Login failed for "${username}": User inactive`)
+      logger.warn('Login failed: User inactive', { username })
       return res.status(403).json({ message: 'Your account is not active. Please contact support.' })
     }
 
     const isMatch = await bcrypt.compare(password, user.password)
     if (!isMatch) {
-      logger.warn(`Login failed for "${username}": Incorrect password`)
+      logger.warn('Login failed: Incorrect password', { username })
       return res.status(401).json({ message: 'Incorrect username or password.' })
     }
 
     const token = jwt.sign(
-      { id: user._id, role: user.role, isActive: user.isActive },
+      {
+        id: user._id,
+        role: user.role,
+        isActive: user.isActive,
+      },
       JWT_SECRET,
       { expiresIn: '1h' }
     )
 
-    logger.info(`User "${username}" logged in`, {
+    logger.info('Login successful', {
       userId: user._id,
+      username: user.username,
       role: user.role,
-      isActive: user.isActive,
     })
 
     res.json({
@@ -82,18 +88,18 @@ router.post('/login', async (req, res, next) => {
       },
     })
   } catch (error) {
-    logger.error(`Login error: ${error.message}`, { error })
+    logger.error('Login error', { error })
     res.status(500).json({ message: 'An unexpected error occurred during login.' })
     next(error)
   }
 })
 
-// Route for profile
+// Protected profile route
 router.get('/profile', authMiddleware, async (req, res, next) => {
   try {
     await getUserProfile(req, res)
   } catch (error) {
-    logger.error(`Error in /profile route: ${error.message}`, { error })
+    logger.error('Error in /profile route', { error })
     next(error)
   }
 })

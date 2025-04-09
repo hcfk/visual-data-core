@@ -6,27 +6,29 @@ import logger from '../utils/logger.js'
 
 const router = express.Router()
 
-// GET user profile
+// GET current user profile
 router.get('/profile', authMiddleware, async (req, res) => {
   try {
-    const userId = req.user.id
-    const user = await User.findById(userId).select('-password')
-
+    const user = await User.findById(req.user.id).select('-password')
     if (!user) {
-      logger.warn(`User not found: ${userId}`)
+      logger.warn('User not found', { userId: req.user.id })
       return res.status(404).json({ message: 'User not found.' })
     }
 
     res.json({ user })
   } catch (error) {
-    logger.error('Error fetching profile:', { error: error.message, stack: error.stack })
+    logger.error('Error fetching profile', {
+      error: error.message,
+      stack: error.stack,
+    })
     res.status(500).json({ error: 'An error occurred while retrieving the profile.' })
   }
 })
 
 // PUT update user profile (admin)
 router.put('/update-user/:user_id', authMiddleware, async (req, res) => {
-  logger.info('Updating user profile')
+  logger.info('Update user attempt', { userId: req.params.user_id })
+
   try {
     const { username, email, role, isActive } = req.body
 
@@ -42,37 +44,40 @@ router.put('/update-user/:user_id', authMiddleware, async (req, res) => {
 
     res.json({ message: 'User updated successfully.', user: updatedUser })
   } catch (error) {
-    logger.error('Error updating user:', { error: error.message })
+    logger.error('Error updating user', {
+      userId: req.params.user_id,
+      error: error.message,
+    })
     res.status(500).json({ error: 'An error occurred while updating the user.' })
   }
 })
 
 // PUT set password (admin only)
 router.put('/users/:id/set-password', authMiddleware, async (req, res) => {
+  const { id } = req.params
+  const { newPassword } = req.body
+
+  if (req.user.role !== 'admin') {
+    logger.warn('Unauthorized password reset attempt', { by: req.user.id })
+    return res.status(403).json({ message: 'Access denied.' })
+  }
+
+  if (!newPassword || newPassword.length < 6) {
+    return res.status(400).json({ message: 'Password must be at least 6 characters.' })
+  }
+
   try {
-    const { id } = req.params
-    const { newPassword } = req.body
-
-    if (req.user.role !== 'admin') {
-      logger.warn(`Unauthorized password set attempt by ${req.user.id}`)
-      return res.status(403).json({ message: 'Access denied.' })
-    }
-
-    if (!newPassword || newPassword.length < 6) {
-      return res.status(400).json({ message: 'Password must be at least 6 characters long.' })
-    }
-
     const hashedPassword = await bcrypt.hash(newPassword, 10)
 
     const updatedUser = await User.findByIdAndUpdate(id, { password: hashedPassword }, { new: true })
-
     if (!updatedUser) {
       return res.status(404).json({ message: 'User not found.' })
     }
 
+    logger.info('Admin updated password', { adminId: req.user.id, userId: id })
     res.json({ message: 'Password updated successfully.' })
   } catch (error) {
-    logger.error('Error setting password:', { error: error.message })
+    logger.error('Error setting password', { error: error.message })
     res.status(500).json({ error: 'An error occurred while setting the password.' })
   }
 })
@@ -88,9 +93,7 @@ router.put('/change-password', authMiddleware, async (req, res) => {
 
   try {
     const user = await User.findById(userId)
-    if (!user) {
-      return res.status(404).json({ error: 'User not found.' })
-    }
+    if (!user) return res.status(404).json({ error: 'User not found.' })
 
     const isMatch = await bcrypt.compare(currentPassword, user.password)
     if (!isMatch) {
@@ -100,13 +103,13 @@ router.put('/change-password', authMiddleware, async (req, res) => {
     user.password = await bcrypt.hash(newPassword, 10)
     await user.save()
 
-    logger.info('Password updated successfully', { userId })
+    logger.info('User changed password', { userId })
     res.json({ message: 'Password updated successfully.' })
   } catch (error) {
-    logger.error('Error changing password:', {
+    logger.error('Error changing password', {
+      userId,
       error: error.message,
       stack: error.stack,
-      userId,
     })
     res.status(500).json({ error: 'An error occurred while changing the password.' })
   }
@@ -115,7 +118,7 @@ router.put('/change-password', authMiddleware, async (req, res) => {
 // GET all users (admin only)
 router.get('/users', authMiddleware, async (req, res) => {
   if (req.user.role !== 'admin') {
-    logger.warn(`Unauthorized attempt to list users by ${req.user.id}`)
+    logger.warn('Unauthorized user list attempt', { by: req.user.id })
     return res.status(403).json({ error: 'You are not authorized to perform this action.' })
   }
 
@@ -123,7 +126,10 @@ router.get('/users', authMiddleware, async (req, res) => {
     const users = await User.find().select('-password')
     res.json(users)
   } catch (error) {
-    logger.error('Error fetching users:', { error: error.message, stack: error.stack })
+    logger.error('Error fetching users', {
+      error: error.message,
+      stack: error.stack,
+    })
     res.status(500).json({ error: 'An error occurred while fetching users.' })
   }
 })
@@ -134,25 +140,33 @@ router.put('/admin/users/:id/activate', authMiddleware, async (req, res) => {
   const { isActive } = req.body
 
   if (req.user.role !== 'admin') {
-    logger.warn(`Unauthorized activation toggle attempt by ${req.user.id}`)
+    logger.warn('Unauthorized activation change attempt', { by: req.user.id })
     return res.status(403).json({ error: 'You are not authorized to perform this action.' })
   }
 
   try {
     const updatedUser = await User.findByIdAndUpdate(id, { isActive }, { new: true, runValidators: true })
-
     if (!updatedUser) {
-      logger.warn(`User not found during activation update: ${id}`)
+      logger.warn('User not found for activation update', { id })
       return res.status(404).json({ error: 'User not found.' })
     }
 
-    logger.info(`User ${id} activation status updated`, { isActive })
+    logger.info('User activation status updated', {
+      adminId: req.user.id,
+      userId: id,
+      isActive,
+    })
+
     res.json({
       message: `User has been ${isActive ? 'activated' : 'deactivated'}.`,
       user: updatedUser,
     })
   } catch (error) {
-    logger.error('Error updating activation status:', { error: error.message, stack: error.stack })
+    logger.error('Error updating activation status', {
+      userId: id,
+      error: error.message,
+      stack: error.stack,
+    })
     res.status(500).json({ error: 'An error occurred while updating user status.' })
   }
 })
